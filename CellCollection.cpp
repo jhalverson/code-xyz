@@ -3,11 +3,11 @@
 long neighbor(double x_, double y_, double z_, double sidex_, double sidey_, double sidez_,
               double cell_sidex_, double cell_sidey_, double cell_sidez_, 
               int cells_per_dimensionx_, int cells_per_dimensiony_,int cells_per_dimensionz_ ) {
-  if (x_ > side_) x_ -= sidex_;
+  if (x_ > sidex_) x_ -= sidex_;
   if (x_ < 0.0)   x_ += sidex_;
-  if (y_ > side_) y_ -= sidey_;
+  if (y_ > sidey_) y_ -= sidey_;
   if (y_ < 0.0)   y_ += sidey_;
-  if (z_ > side_) z_ -= sidez_;
+  if (z_ > sidez_) z_ -= sidez_;
   if (z_ < 0.0)   z_ += sidez_;
   return int(x_ / cell_sidex_) +
          int(y_ / cell_sidey_) * cells_per_dimensionx_ +
