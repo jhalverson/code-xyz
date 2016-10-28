@@ -77,7 +77,7 @@ class Particle {
     void updateSites(double nwx_, double nwy_, double nwz_, double dtheta_);
 
     // update position at PairList build
-    void updatePositionAtPairListBuild(double sidex__, sidey__, sidez__);
+    void updatePositionAtPairListBuild(double sidex__, double sidey__, double sidez__);
 
     // scale quaternions to have a magnitude of unity
     //void normalizeQuaternions();

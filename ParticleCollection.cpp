@@ -1,5 +1,4 @@
 #include <iostream>
-
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -24,9 +23,9 @@ void mic(double& xij_, double& yij_, double& zij_, const double sidex_,
   if(zij_ < -side_halfz) zij_ += sidez_;
 }
 
-long neighbor2(double x_, double y_, double z_, double sidex_, double sidey_, double sidez_
-               double cell_sidex_,double cell_sidey_, double cell_sidez_,
-               int cells_per_dimensionx_,int cells_per_dimensionz_,int cells_per_dimensionz_   ) {
+long neighbor2(double x_, double y_, double z_, double sidex_, double sidey_, double sidez_,
+               double cell_sidex_, double cell_sidey_, double cell_sidez_,
+               int cells_per_dimensionx_, int cells_per_dimensiony_, int cells_per_dimensionz_) {
   if (x_ > sidex_) x_ -= sidex_;
   if (x_ < 0.0)    x_ += sidex_;
   if (y_ > sidey_) y_ -= sidey_;
@@ -50,23 +49,21 @@ void ParticleCollection::buildPairs(PairList& pairs_, CellCollection& cells_, co
   unsigned int num = this->size();
 
   if (verlet_ == 2) {
-/   rs_ = rs_next_;
-//    if (int(side_ / (rc_ + rs_)) != cells_.cells_per_dimension)
-//      cells_.init(side_, rc_, rs_, verlet_);
-  if (int(sidex_ / (rc_ + rs_)) != cells_.cells_per_dimensionx ||
-  int(sidey_ / (rc_ + rs_)) != cells_.cells_per_dimensiony || int(sidez_
-  / (rc_ + rs_)) != cells_.cells_per_dimensionz )
-  cells_.init(sidex_, sidey_, sidez_, rc_, rs_, verlet_);
-
+    rs_ = rs_next_;
+    if (int(sidex_ / (rc_ + rs_)) != cells_.cells_per_dimensionx ||
+        int(sidey_ / (rc_ + rs_)) != cells_.cells_per_dimensiony ||
+        int(sidez_ / (rc_ + rs_)) != cells_.cells_per_dimensionz )
+      cells_.init(sidex_, sidey_, sidez_, rc_, rs_, verlet_);
     else
       for (long k = 0; k < cells_.size(); k++) cells_[k].clear();
 
     // assign particles to cells
     for (unsigned int i = 0; i < num; i++) {
       const Particle pi = this->at(i);
-      long cell_id = neighbor2(pi.x , pi.y, pi.z, sidex_, sidey_, sidez_, cells_.cell_sidex, 
-                              cells_.cell_sidey, cells_.cell_sidez, cells_.cells_per_dimensionx, 
-                              cells_.cells_per_dimensiony,  cells_.cells_per_dimensionx);
+      long cell_id = neighbor2(pi.x , pi.y, pi.z,
+                               sidex_, sidey_, sidez_,
+                               cells_.cell_sidex, cells_.cell_sidey, cells_.cell_sidez,
+                               cells_.cells_per_dimensionx, cells_.cells_per_dimensiony, cells_.cells_per_dimensionz);
       cells_[cell_id].push_back(i);
     }
 
@@ -97,7 +94,7 @@ void ParticleCollection::buildPairs(PairList& pairs_, CellCollection& cells_, co
 	      yij = yi - pj.y;
 	      zij = zi - pj.z;
 	      radiusj = pj.radius;
-	      mic(xij, yij, zij, sidex_, sidey, sidez_);
+	      mic(xij, yij, zij, sidex_, sidey_, sidez_);
 	      rijsq = xij * xij + yij * yij + zij * zij;
 	      if(sqrt(rijsq) - radiusi - radiusj < rs_)
                 pairs_.push_back(std::make_pair(cells_[k].at(i), cells_[k].at(j)));
@@ -154,7 +151,7 @@ void ParticleCollection::buildPairs(PairList& pairs_, CellCollection& cells_, co
 	yij = yi - pj.y;
 	zij = zi - pj.z;
 	radiusj = pj.radius;
-        mic(xij, yij, zij, sidex_,sidey_,sidez_);
+        mic(xij, yij, zij, sidex_, sidey_, sidez_);
 	rijsq = xij * xij + yij * yij + zij * zij;
 	if(sqrt(rijsq) - radiusi - radiusj < rs_) pairs_.push_back(std::make_pair(i, j));
       }
@@ -213,7 +210,7 @@ void ParticleCollection::updateBondList(const PairList pairs_, double sidex_, do
 	    xab = sa.x - sb.x;
 	    yab = sa.y - sb.y;
 	    zab = sa.z - sb.z;
-            mic(xab, yab, zab, sidex_,sidey_,sidez_);
+            mic(xab, yab, zab, sidex_, sidey_, sidez_);
 	    rabsq = xab * xab + yab * yab + zab * zab;
 	    if (rabsq < pow(Lcp_[abs(sa.type)], 2)) {
 	      Quad q(it->first, a, it->second, b);
@@ -305,7 +302,7 @@ void ParticleCollection::updateBondList(const PairList pairs_, double sidex_, do
   // with the while loops seems like should be a problem if only bond left is low probability and it must be broken
   // maybe if try 100 times then manually break it
 
-  int number_to_break = poisson(2.0 * weight_sum * dt_ * assoc_rate * this->size() /(sidex_ * sidey_ * sidez_) ); //ask Jon
+  int number_to_break = poisson(2.0 * weight_sum * dt_ * assoc_rate * this->size() /(sidex_ * sidey_ * sidez_));
   // std::cout << "number_to_break = " << number_to_break << ", " << 2.0 * weight_sum * dt_ * assoc_rate * this->size() / pow(side_, 3) << std::endl;
   int number_broken = 0;
  
@@ -352,8 +349,8 @@ void ParticleCollection::updateBondList(const PairList pairs_, double sidex_, do
   }
 }
 
-void ParticleCollection::computeSpringForcesAndTorques(double sidex_, sidey_, sidez_, BondList bonds_,
-                                                       double Lcp_[], double k_spring_) {
+void ParticleCollection::computeSpringForcesAndTorques(double sidex_, double sidey_, double sidez_,
+                                                       BondList bonds_, double Lcp_[], double k_spring_) {
   //double side_half = 0.5 * side_;
   double xab;
   double yab;
@@ -405,8 +402,8 @@ void ParticleCollection::computeSpringForcesAndTorques(double sidex_, sidey_, si
 
 
 
-void ParticleCollection::computeForcesAndTorques(const PairList pairs_, double sidex_,double sidey_, 
-                                                 double sidex_, size_t max_site_type_) {
+void ParticleCollection::computeForcesAndTorques(const PairList pairs_, double sidex_, double sidey_, 
+                                                 double sidez_, size_t max_site_type_) {
   double xab,xa,xb,xij;
   double yab,ya,yb,yij;
   double zab,za,zb,zij;
@@ -419,7 +416,6 @@ void ParticleCollection::computeForcesAndTorques(const PairList pairs_, double s
   double fabz,fijz;
   double theta_1, theta_2, Vata, Vrep, M, g_theta1, g_theta2;
   double alpha, P_0, Pi,Pj,epsi,epsiRep,B1,B;
-
 
     for (PairList::const_iterator it = pairs_.begin(); it < pairs_.end(); it++) {
 
@@ -456,9 +452,9 @@ void ParticleCollection::computeForcesAndTorques(const PairList pairs_, double s
         
          mic(xa, ya, za, sidex_, sidey_, sidez_ );
          mic(xb, yb, zb, sidex_, sidey_, sidez_);
-         mic(xij, yij, zij, sidex_,sidey_,sidez_); //added
+         mic(xij, yij, zij, sidex_, sidey_, sidez_); //added
         
-          D3Vector<double> ra_( xa, ya, za ), rb_(xb,yb,zb),rij_( xij, yij, zij);
+          D3Vector<double> ra_(xa, ya, za), rb_(xb, yb, zb), rij_(xij, yij, zij);
           ra_.normalize();
           rij_.normalize();
           Pi = ra_.dotp(rij_); //change ra and rij to ra_ and rij_
@@ -655,7 +651,7 @@ Fj =  ((((((rij.scalarp(Pi).subs(ra)).scalarp(1/(1 + (exp(alpha * (Pi-P_0)))))).
   }
 }
 */
-void ParticleCollection::applyRepulsiveForce(double sidex_,sidey_,sidez_) {
+void ParticleCollection::applyRepulsiveForce(double sidex_, double sidey_, double sidez_) {
 
 double z_value = 0.9 * sidez_ ;
 
@@ -1355,8 +1351,8 @@ std::string strip2ndValue(std::string line_) {
 
 void ParticleCollection::readScript(const char* f_, long long& step_, long long& steps_,
                                     long long& freqWrite_,
-                                    double& dt_, double& sidex_, double& sidey_, double& sidez_,double& k_spring_,
-                                    int& verlet_, double& rc_, double& rs_,
+                                    double& dt_, double& sidex_, double& sidey_, double& sidez_,
+                                    double& k_spring_, int& verlet_, double& rc_, double& rs_,
                                     BondList& bonds_, unsigned int& seed_, bool& restart_,
                                     BondList& unbreakable_, double xcp_[], double Lcp_[],
                                     size_t& max_site_type_, const double a0_) {
@@ -1399,7 +1395,7 @@ void ParticleCollection::readScript(const char* f_, long long& step_, long long&
             if (i == 2) Lcp_[StringToNumber<int>(value)] = StringToNumber<double>(sub); } }
         else if (line.find("config") != std::string::npos) {
           value = strip2ndValue(line.substr(line.find("g") + 1, line.length() - line.find("g") - 1));
-          readConfiguration(value.c_str(), step_, side_, bonds_, unbreakable_, a0_); }
+          readConfiguration(value.c_str(), step_, sidex_, sidey_, sidez_, bonds_, unbreakable_, a0_); }
         else if (line.find("kspring") != std::string::npos) {
           value = strip2ndValue(line.substr(line.find("g") + 1, line.length() - line.find("g") - 1));
           k_spring_ = StringToNumber<double>(value); }
@@ -1703,7 +1699,7 @@ void ParticleCollection::readConfiguration(const char* f_, long long& step_, dou
 
 // create a simple system with 27 particles and two sites per particle
 void ParticleCollection::initialize(double& sidex_, double& sidey_, double& sidez_, const double a0_) {
-  side_ = 10.0;
+  double side_ = 10.0;
   int ct = 0;
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {

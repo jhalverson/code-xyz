@@ -59,7 +59,7 @@ Particle::Particle(int id_, int type_, double radius_, double x_,
   */
 }
 
-void Particle::updatePositionAtPairListBuild(double sidex__,sidey__,sidez__) {
+void Particle::updatePositionAtPairListBuild(double sidex__, double sidey__, double sidez__) {
   x_skin = x + xflag * sidex__;
   y_skin = y + yflag * sidey__;
   z_skin = z + zflag * sidez__;

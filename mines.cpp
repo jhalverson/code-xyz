@@ -95,8 +95,8 @@ int main(int argc, char* argv[]) {
       printf("\n"); }
     printf("\n");
     */
-    particles.updatePositionsAndOrientations(sidex, sidey,sidez, dt, verlet, rc, rs, skin_violation, a0, Dij, hydrodynamics);
-    if (verlet > 0 && skin_violation) particles.buildPairs(pairs, cells, sidex,sidey,sidez, verlet, rs, rc, skin_violation, rs_next);
+    particles.updatePositionsAndOrientations(sidex, sidey, sidez, dt, verlet, rc, rs, skin_violation, a0, Dij, hydrodynamics);
+    if (verlet > 0 && skin_violation) particles.buildPairs(pairs, cells, sidex, sidey, sidez, verlet, rs, rc, skin_violation, rs_next);
   //  particles.updateBondList(pairs, side, dt, bonds, unbreakable, xcp, Lcp, t, life_times, max_site_type); //not used niladri
 
     if (t % freqWrite == 0) particles.writeConfiguration(t, end_step, freqWrite, dt, sidex, sidey, sidez, k_spring, bonds, unbreakable, a0);
@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
       rs_next = rs - 0.05 * rs_sign * elapsed_sign;
       if (rs_next < rc + 1.0) rs_next = rc + 1.0;
       if (rs_next > 0.5 * sidex || rs_next > 0.5 * sidey || rs_next > 0.5* sidez) 
-      rs_next = std::min( 0.5 * sidex, std::min(0.5 * sidey, 0.5 * sidez))  ; // need to ask John
+        rs_next = std::min(0.5 * sidex, std::min(0.5 * sidey, 0.5 * sidez));
       elapsed_prev = elapsed;
       start = clock();
       ave_elapsed_time += elapsed;
