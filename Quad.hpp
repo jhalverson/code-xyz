@@ -34,6 +34,7 @@ class Quad {
     }
 
 
+    // constructor
     Quad (const Quad& v) : first(v.first), second(v.second), third(v.third), fourth(v.fourth) {}
 
 };
