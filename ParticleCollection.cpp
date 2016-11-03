@@ -33,7 +33,7 @@ long neighbor2(double x_, double y_, double z_, double sidex_, double sidey_, do
   if (z_ > sidez_) z_ -= sidez_;
   if (z_ < 0.0)    z_ += sidez_;
   return int(x_ / cell_sidex_) +
-         int(y_ / cell_sidey_) * cells_per_dimensiony_ +
+         int(y_ / cell_sidey_) * cells_per_dimensionx_ +
          int(z_ / cell_sidez_) * cells_per_dimensionx_ * cells_per_dimensiony_;
 }
 
